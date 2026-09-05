@@ -368,6 +368,7 @@ export default function Page() {
     const cleanupFns = [];
 
     /* ================= Theme toggle ================= */
+    let onThemeChange = null;
     const themeToggleEl = document.querySelector('[data-theme-toggle]');
     function currentTheme() {
       return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
@@ -381,6 +382,7 @@ export default function Page() {
       document.documentElement.setAttribute('data-theme', theme);
       try { localStorage.setItem('theme', theme); } catch (e) { /* noop */ }
       setThemeLabel();
+      if (onThemeChange) onThemeChange(theme);
     }
     function toggleTheme() {
       applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
@@ -723,10 +725,18 @@ export default function Page() {
     function initLiquidReveal() {
       const container = document.getElementById('liquid-reveal');
       const canvas = document.getElementById('liquid-canvas');
+      const baseImgEl = document.getElementById('liquid-base-img');
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (reduceMotion) return () => {};
 
-      const afterSrc = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg/1280px-%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg';
+      const SOCRATES_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Jacques-Louis_David_-_The_Death_of_Socrates_-_Google_Art_Project.jpg/1280px-Jacques-Louis_David_-_The_Death_of_Socrates_-_Google_Art_Project.jpg';
+      const ATHENS_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg/1280px-%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg';
+      function imagesForTheme(theme) {
+        return theme === 'light'
+          ? { base: ATHENS_URL, baseAlt: 'Raphael, The School of Athens', reveal: SOCRATES_URL }
+          : { base: SOCRATES_URL, baseAlt: 'Jacques-Louis David, The Death of Socrates', reveal: ATHENS_URL };
+      }
+
       const brushRadius = 143, decay = 0.016;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
@@ -745,7 +755,20 @@ export default function Page() {
       afterImg.crossOrigin = 'anonymous';
       let imgReady = false;
       afterImg.onload = () => { imgReady = true; drawCover(); };
-      afterImg.src = afterSrc;
+
+      function setImagesForTheme(theme) {
+        const pics = imagesForTheme(theme);
+        if (baseImgEl) {
+          baseImgEl.src = pics.base;
+          baseImgEl.alt = pics.baseAlt;
+        }
+        if (afterImg.src !== pics.reveal) {
+          imgReady = false;
+          afterImg.src = pics.reveal;
+        }
+      }
+      setImagesForTheme(currentTheme());
+      onThemeChange = setImagesForTheme;
 
       function drawCover() {
         if (!imgReady || w === 0) return;
