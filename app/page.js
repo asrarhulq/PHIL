@@ -340,6 +340,7 @@ const MARKUP = `
           <label for="rf-project">Idea</label>
           <textarea id="rf-project" name="project" rows="4" placeholder="A question, argument, or topic you'd like us to explore." required></textarea>
         </div>
+        <p class="form-error" id="rf-error" hidden></p>
         <div class="form-bottom">
           <span class="form-note">We reply within one business day.</span>
           <span class="pill-btn hover-spot">
@@ -701,6 +702,7 @@ export default function Page() {
         requestForm.classList.remove('hide');
         modalSuccess.classList.remove('show');
         rfSubmitLabel.textContent = 'Send';
+        document.getElementById('rf-error').hidden = true;
       }, 300);
     }
     function onModalKeydown(e) { if (e.key === 'Escape') closeModal(); }
@@ -711,13 +713,33 @@ export default function Page() {
     document.querySelector('.modal-panel').addEventListener('click', (e) => e.stopPropagation());
     document.getElementById('modal-success-close').addEventListener('click', closeModal);
 
-    requestForm.addEventListener('submit', (e) => {
+    const rfError = document.getElementById('rf-error');
+    const rfSubmitBtn = document.getElementById('rf-submit');
+    requestForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      rfError.hidden = true;
+      rfSubmitBtn.disabled = true;
       rfSubmitLabel.textContent = 'Sending…';
-      setTimeout(() => {
+      const data = Object.fromEntries(new FormData(requestForm).entries());
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || 'Something went wrong. Please try again.');
+        }
         requestForm.classList.add('hide');
         modalSuccess.classList.add('show');
-      }, 500);
+      } catch (err) {
+        rfError.textContent = err.message || 'Something went wrong. Please try again.';
+        rfError.hidden = false;
+      } finally {
+        rfSubmitBtn.disabled = false;
+        rfSubmitLabel.textContent = 'Send';
+      }
     });
     cleanupFns.push(() => document.removeEventListener('keydown', onModalKeydown));
 

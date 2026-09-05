@@ -452,6 +452,7 @@ footer{position:relative;overflow:hidden;border-radius:var(--radius-card) var(--
 .field input,.field textarea{width:100%;border:1px solid var(--line);background:rgba(var(--surface-rgb),.5);border-radius:var(--radius-control);padding:.75rem 1rem;font-size:.875rem;outline:none;font-family:inherit;transition:border-color .25s,background-color .25s}
 .field textarea{resize:none}
 .field input:focus,.field textarea:focus{border-color:rgba(var(--fg-rgb),.3);background:var(--background)}
+.form-error{margin-top:.75rem;font-size:.8125rem;color:#b3462c}
 .form-bottom{margin-top:.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
 .form-note{font-size:.75rem;color:rgba(var(--fg-rgb),.45)}
 .modal-success{display:none;flex-direction:column;align-items:center;text-align:center;padding-block:2rem;gap:1rem}
